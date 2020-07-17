@@ -29,7 +29,7 @@
         <lombok.version>1.18.2</lombok.version>
         <mysql.version>5.1.47</mysql.version>
         <druid.version>1.1.13</druid.version>
-        <mybatis.plus.spring.boot.version>3.3.2</mybatis.plus.spring.boot.version>
+        <mybatis.plus.spring.boot.version>3.1.0</mybatis.plus.spring.boot.version>
         <elasticsearch.version>6.6.2</elasticsearch.version>
         <redission.version>3.12.0</redission.version>
         <validator.version>5.4.1.Final</validator.version>
