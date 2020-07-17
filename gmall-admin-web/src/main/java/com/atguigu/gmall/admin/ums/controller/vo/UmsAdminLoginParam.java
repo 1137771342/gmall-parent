@@ -1,4 +1,4 @@
-package com.atguigu.gmall.admin.ums.vo;
+package com.atguigu.gmall.admin.ums.controller.vo;
 
 import io.swagger.annotations.ApiModelProperty;
 import org.hibernate.validator.constraints.NotEmpty;

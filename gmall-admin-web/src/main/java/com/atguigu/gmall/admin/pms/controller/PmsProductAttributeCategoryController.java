@@ -7,12 +7,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 /**
  * 商品属性分类Controller
  * Created by atguigu 4/26.
  */
+@CrossOrigin
 @RestController
 @Api(tags = "PmsProductAttributeCategoryController", description = "商品属性分类管理")
 @RequestMapping("/productAttribute/category")

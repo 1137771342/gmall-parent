@@ -1,18 +1,16 @@
 package com.atguigu.gmall.admin.ums.controller;
 
 import com.alibaba.dubbo.config.annotation.Reference;
-import com.atguigu.gmall.admin.ums.vo.UmsAdminLoginParam;
-import com.atguigu.gmall.admin.ums.vo.UmsAdminParam;
+import com.atguigu.gmall.admin.ums.controller.vo.UmsAdminLoginParam;
+import com.atguigu.gmall.admin.ums.controller.vo.UmsAdminParam;
 import com.atguigu.gmall.admin.utils.JwtTokenUtil;
+import com.atguigu.gmall.to.CommonResult;
 import com.atguigu.gmall.ums.entity.Admin;
 import com.atguigu.gmall.ums.service.AdminService;
-import com.atguigu.gmall.to.CommonResult;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -76,8 +74,8 @@ public class UmsAdminController {
 
         //3、是否可以进行刷新（未过刷新时间）
         if (jwtTokenUtil.canRefresh(token)) {
-            refreshToken =  jwtTokenUtil.refreshToken(token);
-        }else  if(refreshToken == null && "".equals(refreshToken)){
+            refreshToken = jwtTokenUtil.refreshToken(token);
+        } else if (refreshToken == null && "".equals(refreshToken)) {
             return new CommonResult().failed();
         }
 
@@ -94,9 +92,9 @@ public class UmsAdminController {
     public Object getAdminInfo(HttpServletRequest request) {
         String oldToken = request.getHeader(tokenHeader);
         String userName = jwtTokenUtil.getUserNameFromToken(oldToken.substring(tokenHead.length()));
-        Admin umsAdmin =adminService.getUserByUserName(userName);
+        Admin umsAdmin = adminService.getUserByUserName(userName);
 
-       // Admin umsAdmin = adminService.getOne(new QueryWrapper<Admin>().eq("username",userName));
+        // Admin umsAdmin = adminService.getOne(new QueryWrapper<Admin>().eq("username",userName));
         Map<String, Object> data = new HashMap<>();
         data.put("username", umsAdmin.getUsername());
         data.put("roles", new String[]{"TEST"});
@@ -114,11 +112,11 @@ public class UmsAdminController {
     }
 
     @ApiOperation("根据用户名或姓名分页获取用户列表")
-    @RequestMapping(value = "/list",method = RequestMethod.GET)
+    @RequestMapping(value = "/list", method = RequestMethod.GET)
     @ResponseBody
-    public Object list(@RequestParam(value = "name",required = false) String name,
+    public Object list(@RequestParam(value = "name", required = false) String name,
                        @RequestParam(value = "pageSize", defaultValue = "5") Integer pageSize,
-                       @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum){
+                       @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum) {
         //TODO 分页查询用户信息
 
         //TODO 响应需要包含分页信息；详细查看swagger规定
@@ -126,63 +124,63 @@ public class UmsAdminController {
     }
 
     @ApiOperation("获取指定用户信息")
-    @RequestMapping(value = "/{id}",method = RequestMethod.GET)
+    @RequestMapping(value = "/{id}", method = RequestMethod.GET)
     @ResponseBody
-    public Object getItem(@PathVariable Long id){
+    public Object getItem(@PathVariable Long id) {
 
         //TODO 获取指定用户信息
         return new CommonResult().failed();
     }
 
     @ApiOperation("更新指定用户信息")
-    @RequestMapping(value = "/update/{id}",method = RequestMethod.POST)
+    @RequestMapping(value = "/update/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public Object update(@PathVariable Long id,@RequestBody Admin admin){
+    public Object update(@PathVariable Long id, @RequestBody Admin admin) {
 
         //TODO 更新指定用户信息
         return new CommonResult().failed();
     }
 
     @ApiOperation("删除指定用户信息")
-    @RequestMapping(value = "/delete/{id}",method = RequestMethod.POST)
+    @RequestMapping(value = "/delete/{id}", method = RequestMethod.POST)
     @ResponseBody
-    public Object delete(@PathVariable Long id){
+    public Object delete(@PathVariable Long id) {
         //TODO 删除指定用户信息
         return new CommonResult().failed();
     }
 
     @ApiOperation("给用户分配角色")
-    @RequestMapping(value = "/role/update",method = RequestMethod.POST)
+    @RequestMapping(value = "/role/update", method = RequestMethod.POST)
     @ResponseBody
     public Object updateRole(@RequestParam("adminId") Long adminId,
-                             @RequestParam("roleIds") List<Long> roleIds){
+                             @RequestParam("roleIds") List<Long> roleIds) {
         //TODO 给用户分配角色
         return new CommonResult().failed();
     }
 
     @ApiOperation("获取指定用户的角色")
-    @RequestMapping(value = "/role/{adminId}",method = RequestMethod.GET)
+    @RequestMapping(value = "/role/{adminId}", method = RequestMethod.GET)
     @ResponseBody
-    public Object getRoleList(@PathVariable Long adminId){
+    public Object getRoleList(@PathVariable Long adminId) {
         //TODO 获取指定用户的角色
 
         return new CommonResult().success(null);
     }
 
     @ApiOperation("给用户分配(增减)权限")
-    @RequestMapping(value = "/permission/update",method = RequestMethod.POST)
+    @RequestMapping(value = "/permission/update", method = RequestMethod.POST)
     @ResponseBody
     public Object updatePermission(@RequestParam Long adminId,
-                                   @RequestParam("permissionIds") List<Long> permissionIds){
+                                   @RequestParam("permissionIds") List<Long> permissionIds) {
         //TODO 给用户分配(增减)权限
 
         return new CommonResult().failed();
     }
 
     @ApiOperation("获取用户所有权限（包括+-权限）")
-    @RequestMapping(value = "/permission/{adminId}",method = RequestMethod.GET)
+    @RequestMapping(value = "/permission/{adminId}", method = RequestMethod.GET)
     @ResponseBody
-    public Object getPermissionList(@PathVariable Long adminId){
+    public Object getPermissionList(@PathVariable Long adminId) {
         //TODO 获取用户所有权限（包括+-权限）
         return new CommonResult().failed();
     }

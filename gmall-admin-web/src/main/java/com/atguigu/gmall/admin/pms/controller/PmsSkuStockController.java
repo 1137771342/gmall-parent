@@ -6,8 +6,6 @@ import com.atguigu.gmall.pms.service.SkuStockService;
 import com.atguigu.gmall.to.CommonResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,6 +14,7 @@ import java.util.List;
 /**
  * sku库存Controller
  */
+@CrossOrigin
 @RestController
 @Api(tags = "PmsSkuStockController", description = "sku商品库存管理")
 @RequestMapping("/sku")
