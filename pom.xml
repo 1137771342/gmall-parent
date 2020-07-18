@@ -17,7 +17,6 @@
         <module>gmall-ums</module>
         <module>gmall-admin-web</module>
         <module>gmall-common-api</module>
-        <module>gmall-mybatisplus-generator</module>
     </modules>
 
     <properties>

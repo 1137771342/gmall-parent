@@ -1,5 +1,6 @@
 package com.atguigu.gmall.admin.pms.controller;
 
+import com.alibaba.dubbo.config.annotation.Reference;
 import com.atguigu.gmall.pms.service.BrandService;
 import com.atguigu.gmall.to.CommonResult;
 import com.atguigu.gmall.vo.PageInfoVo;
@@ -20,7 +21,7 @@ import java.util.List;
 @Api(tags = "PmsBrandController", description = "商品品牌管理")
 @RequestMapping("/brand")
 public class PmsBrandController {
-    //    @Reference
+    @Reference
     private BrandService brandService;
 
     @ApiOperation(value = "获取全部品牌列表")

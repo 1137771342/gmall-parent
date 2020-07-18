@@ -15,6 +15,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,10 +40,8 @@ public class UmsAdminController {
 
     @ApiOperation(value = "用户注册")
     @PostMapping(value = "/register")
-    public Object register(@RequestBody UmsAdminParam umsAdminParam, BindingResult result) {
+    public Object register(@Valid @RequestBody UmsAdminParam umsAdminParam, BindingResult result) {
         Admin admin = null;
-        //TODO 完成注册功能
-
         return new CommonResult().success(admin);
     }
 
