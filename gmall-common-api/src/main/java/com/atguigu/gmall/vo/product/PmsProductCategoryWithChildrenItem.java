@@ -8,6 +8,7 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
+ * @author Administrator
  */
 @Data
 public class PmsProductCategoryWithChildrenItem extends ProductCategory  implements Serializable {

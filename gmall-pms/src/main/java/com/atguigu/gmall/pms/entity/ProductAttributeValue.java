@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import java.io.Serializable;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.experimental.Accessors;
@@ -24,6 +25,7 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 @TableName("pms_product_attribute_value")
 @ApiModel(value="ProductAttributeValue对象", description="存储产品参数信息的表")
+@Builder
 public class ProductAttributeValue implements Serializable {
 
     private static final long serialVersionUID = 1L;

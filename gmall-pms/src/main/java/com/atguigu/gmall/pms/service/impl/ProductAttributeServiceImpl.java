@@ -4,6 +4,10 @@ import com.alibaba.dubbo.config.annotation.Service;
 import com.atguigu.gmall.pms.entity.ProductAttribute;
 import com.atguigu.gmall.pms.mapper.ProductAttributeMapper;
 import com.atguigu.gmall.pms.service.ProductAttributeService;
+import com.atguigu.gmall.vo.PageInfoVo;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Component;
 
@@ -19,4 +23,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class ProductAttributeServiceImpl extends ServiceImpl<ProductAttributeMapper, ProductAttribute> implements ProductAttributeService {
 
+    @Override
+    public PageInfoVo getCategoryAttributes(Long cid, Integer type, Integer pageSize, Integer pageNum) {
+        QueryWrapper<ProductAttribute> eq = new QueryWrapper<ProductAttribute>()
+                .eq("product_attribute_category_id", cid)
+                .eq("type", type);
+        IPage<ProductAttribute> page = this.page(new Page<ProductAttribute>(pageNum, pageSize), eq);
+        return PageInfoVo.getVo(page, pageSize.longValue());
+    }
 }
