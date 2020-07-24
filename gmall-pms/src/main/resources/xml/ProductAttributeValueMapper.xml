@@ -15,4 +15,20 @@
         id, product_id, product_attribute_id, value
     </sql>
 
+
+    <select id="selectProductBaseAttrAndValue" resultType="com.atguigu.gmall.to.es.EsProductAttributeValue">
+        SELECT
+            pav.*,
+            pa.type,
+            pa.`name`
+        FROM
+            `pms_product_attribute` pa
+            LEFT JOIN pms_product_attribute_value pav ON pa.id = pav.product_attribute_id
+        WHERE
+            pav.product_id = #{id}
+            AND pa.type =1
+    </select>
+
+
+
 </mapper>

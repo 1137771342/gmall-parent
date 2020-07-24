@@ -6,6 +6,8 @@ import com.atguigu.gmall.vo.product.PmsProductParam;
 import com.atguigu.gmall.vo.product.PmsProductQueryParam;
 import com.baomidou.mybatisplus.extension.service.IService;
 
+import java.util.List;
+
 /**
  * <p>
  * 商品信息 服务类
@@ -19,8 +21,22 @@ public interface ProductService extends IService<Product> {
     PageInfoVo pageInfo(PmsProductQueryParam productQueryParam);
 
     /**
+     * 根据商品id获取商品
+     * @param id
+     * @return
+     */
+    Product getProductInfo(Long id);
+    /**
      * 保存商品
      * @param productParam
      */
     void saveProduct(PmsProductParam productParam);
+
+    /**
+     *商品批量上下架
+     * @param ids
+     * @param publishStatus
+     */
+    void batchUpdatePublishStatus (List<Long> ids, Integer publishStatus);
+
 }

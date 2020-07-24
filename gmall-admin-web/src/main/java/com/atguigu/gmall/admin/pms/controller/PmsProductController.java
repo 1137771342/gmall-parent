@@ -72,7 +72,8 @@ public class PmsProductController {
     @PostMapping(value = "/update/publishStatus")
     public Object updatePublishStatus(@RequestParam("ids") List<Long> ids,
                                       @RequestParam("publishStatus") Integer publishStatus) {
-        //TODO 批量上下架
+        //商品的批量上下架功能
+        productService.batchUpdatePublishStatus(ids,publishStatus);
         return new CommonResult().success(null);
     }
 

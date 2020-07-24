@@ -1,12 +1,13 @@
 package com.atguigu.gmall.pms.service.impl;
 
 import com.alibaba.dubbo.config.annotation.Service;
-import com.atguigu.gmall.pms.entity.Product;
-import com.atguigu.gmall.pms.entity.ProductAttributeValue;
-import com.atguigu.gmall.pms.entity.ProductFullReduction;
-import com.atguigu.gmall.pms.entity.SkuStock;
+import com.atguigu.gmall.constant.EsConstant;
+import com.atguigu.gmall.pms.entity.*;
 import com.atguigu.gmall.pms.mapper.*;
 import com.atguigu.gmall.pms.service.ProductService;
+import com.atguigu.gmall.to.es.EsProduct;
+import com.atguigu.gmall.to.es.EsProductAttributeValue;
+import com.atguigu.gmall.to.es.EsSkuProductInfo;
 import com.atguigu.gmall.vo.PageInfoVo;
 import com.atguigu.gmall.vo.product.PmsProductParam;
 import com.atguigu.gmall.vo.product.PmsProductQueryParam;
@@ -14,15 +15,21 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import io.searchbox.client.JestClient;
+import io.searchbox.core.Delete;
+import io.searchbox.core.DocumentResult;
+import io.searchbox.core.Index;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -33,7 +40,7 @@ import java.util.List;
  * @author Lfy
  * @since 2019-05-08
  */
-@Service
+@Service()
 @Component
 @Slf4j
 public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> implements ProductService {
@@ -51,6 +58,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     //库存
     @Autowired
     SkuStockMapper skuStockMapper;
+
+    @Autowired
+    ProductAttributeMapper productAttributeMapper;
+
+    @Autowired
+    private JestClient jestClient;
 
     ThreadLocal<Long> threadLocal = new ThreadLocal<>();
 
@@ -81,6 +94,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         return new PageInfoVo(page.getTotal(), page.getPages(), page.getSize(), page.getRecords(), page.getCurrent());
     }
 
+    @Override
+    public Product getProductInfo(Long id) {
+        return productMapper.selectById(id);
+    }
+
 
     /**
      * 保存商品
@@ -103,6 +121,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         //保存商品库存表
         proxy.saveSkuStock(productParam);
     }
+
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void saveBaseProduct(PmsProductParam productParam) {
@@ -134,7 +153,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             o.setProductId(threadLocal.get());
             productLadderMapper.insert(o);
         });
-        int i= 10/0;
+        int i = 10 / 0;
         log.info("当前的线程号...{}当前线程...{}", Thread.currentThread().getId(), Thread.currentThread().getName());
 
     }
@@ -158,6 +177,124 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
         log.info("当前的线程号...{}当前线程...{}", Thread.currentThread().getId(), Thread.currentThread().getName());
 
+    }
+
+
+    /**
+     * @param ids
+     * @param publishStatus
+     */
+    @Override
+    public void batchUpdatePublishStatus(List<Long> ids, Integer publishStatus) {
+        if (publishStatus == 0) {
+            //商品下架，从es中删除商品
+            for (Long id : ids) {
+                setProductPublishStatus(publishStatus, id);
+                deleteProductFromEs(id);
+            }
+
+        } else {
+            //商品上架，保存商品到es
+            for (Long id : ids) {
+                setProductPublishStatus(publishStatus, id);
+                saveProductToEs(id);
+            }
+        }
+
+
+    }
+
+    private void setProductPublishStatus(Integer publishStatus, Long id) {
+        Product product = new Product();
+        product.setId(id);
+        product.setPublishStatus(publishStatus);
+        productMapper.updateById(product);
+    }
+
+    private void deleteProductFromEs(Long id) {
+        Delete builder = new Delete.Builder(id.toString())
+                .index(EsConstant.PRODUCT_ES_INDEX)
+                .type(EsConstant.PRODUCT_TYPE).build();
+        try {
+            DocumentResult execute = jestClient.execute(builder);
+            if (execute.isSucceeded()) {
+                log.info("商品id：{} ==> es下架成功", id);
+            } else {
+                log.error("商品：{} ==》ES下架失败", id);
+            }
+        } catch (IOException e) {
+            log.error("商品：{} ==》ES下架失败", id);
+        }
+    }
+
+    private void saveProductToEs(Long id) {
+        //商品的基础数据
+        //商品的批量上下架操作,首先我们要将上架的商品存在es中
+        EsProduct esProduct = new EsProduct();
+        Product productInfo = getProductInfo(id);
+        BeanUtils.copyProperties(productInfo, esProduct);
+        //todo 保存商品的spu信息 EsProductAttributeValue
+        List<EsProductAttributeValue> attributeValues = productAttributeValueMapper.selectProductBaseAttrAndValue(id);
+        esProduct.setAttrValueList(attributeValues);
+
+        //todo 保存商品的sku信息 EsSkuProductInfo
+        List<ProductAttribute> skuAttributeNames = productAttributeMapper.selectProductSaleAttrName(id);
+        List<EsSkuProductInfo> esSkuProductInfos = new ArrayList<>();
+
+        List<SkuStock> stocks = skuStockMapper.selectList(new QueryWrapper<SkuStock>().eq("product_id", id));
+        stocks.forEach(skuStock -> {
+            EsSkuProductInfo info = new EsSkuProductInfo();
+            //复制基本的sku属性
+            BeanUtils.copyProperties(stocks, info);
+            //设置skutitle
+            String skuTitle = esProduct.getName();
+            if (StringUtils.isNotBlank(skuStock.getSp1())) {
+                skuTitle += " " + skuStock.getSp1();
+            }
+            if (StringUtils.isNotBlank(skuStock.getSp2())) {
+                skuTitle += " " + skuStock.getSp2();
+            }
+            if (StringUtils.isNotBlank(skuStock.getSp3())) {
+                skuTitle += " " + skuStock.getSp3();
+            }
+            info.setSkuTitle(skuTitle);
+            List<EsProductAttributeValue> skuAttributeValues = new ArrayList<>();
+            for (int i = 0; i < skuAttributeNames.size(); i++) {
+                EsProductAttributeValue value = new EsProductAttributeValue();
+                value.setProductAttributeId(skuAttributeNames.get(i).getId());
+                value.setName(skuAttributeNames.get(i).getName());
+                value.setType(skuAttributeNames.get(i).getType());
+                value.setProductId(id);
+                //设置value属性
+                if (i == 0) {
+                    value.setValue(skuStock.getSp1());
+                }
+                if (i == 1) {
+                    value.setValue(skuStock.getSp2());
+                }
+                if (i == 2) {
+                    value.setValue(skuStock.getSp3());
+                }
+                skuAttributeValues.add(value);
+            }
+            info.setAttributeValues(skuAttributeValues);
+            esSkuProductInfos.add(info);
+        });
+        esProduct.setSkuProductInfos(esSkuProductInfos);
+        //将商品保存在es中
+        Index build = new Index.Builder(esProduct).index(EsConstant.PRODUCT_ES_INDEX).type(EsConstant.PRODUCT_TYPE).
+                build();
+        try {
+            DocumentResult execute = jestClient.execute(build);
+            boolean succeeded = execute.isSucceeded();
+            if (succeeded) {
+                log.info("ES中；id为{}商品上架完成", id);
+            } else {
+                log.info("ES中；id为{}商品未保存成功,开始重试", id);
+            }
+        } catch (IOException e) {
+            log.error("ES中；id为{}商品数据保存异常；{}", id, e.getMessage());
+        }
     }
 
 

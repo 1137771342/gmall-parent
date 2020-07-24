@@ -1,7 +1,10 @@
 package com.atguigu.gmall.pms.mapper;
 
 import com.atguigu.gmall.pms.entity.ProductAttributeValue;
+import com.atguigu.gmall.to.es.EsProductAttributeValue;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+import java.util.List;
 
 /**
  * <p>
@@ -13,4 +16,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface ProductAttributeValueMapper extends BaseMapper<ProductAttributeValue> {
 
+    /**
+     * @param id 保存商品spu的基础数据
+     */
+    List<EsProductAttributeValue> selectProductBaseAttrAndValue(Long id);
 }
