@@ -40,7 +40,7 @@ import java.util.List;
  * @author Lfy
  * @since 2019-05-08
  */
-@Service()
+@Service
 @Component
 @Slf4j
 public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> implements ProductService {
@@ -230,22 +230,23 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private void saveProductToEs(Long id) {
         //商品的基础数据
         //商品的批量上下架操作,首先我们要将上架的商品存在es中
-        EsProduct esProduct = new EsProduct();
         Product productInfo = getProductInfo(id);
+        EsProduct esProduct = new EsProduct();
         BeanUtils.copyProperties(productInfo, esProduct);
         //todo 保存商品的spu信息 EsProductAttributeValue
         List<EsProductAttributeValue> attributeValues = productAttributeValueMapper.selectProductBaseAttrAndValue(id);
         esProduct.setAttrValueList(attributeValues);
 
+        List<SkuStock> stocks = skuStockMapper.selectList(new QueryWrapper<SkuStock>().eq("product_id", id));
+        List<EsSkuProductInfo> esSkuProductInfos = new ArrayList<>();
         //todo 保存商品的sku信息 EsSkuProductInfo
         List<ProductAttribute> skuAttributeNames = productAttributeMapper.selectProductSaleAttrName(id);
-        List<EsSkuProductInfo> esSkuProductInfos = new ArrayList<>();
 
-        List<SkuStock> stocks = skuStockMapper.selectList(new QueryWrapper<SkuStock>().eq("product_id", id));
         stocks.forEach(skuStock -> {
             EsSkuProductInfo info = new EsSkuProductInfo();
             //复制基本的sku属性
-            BeanUtils.copyProperties(stocks, info);
+            BeanUtils.copyProperties(skuStock, info);
+
             //设置skutitle
             String skuTitle = esProduct.getName();
             if (StringUtils.isNotBlank(skuStock.getSp1())) {

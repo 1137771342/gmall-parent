@@ -24,7 +24,7 @@
     </sql>
 
 
-    <select id="selectProductSaleAttrName" resultType="com.atguigu.gmall.pms.entity.ProductAttribute">
+    <select id="selectProductSaleAttrName" resultMap="BaseResultMap">
         SELECT
             *
         FROM
@@ -34,8 +34,8 @@
             SELECT
                 pa.product_attribute_category_id
             FROM
-                `pms_product_attribute` pa
-                LEFT JOIN pms_product_attribute_value pav ON pa.id = pav.product_attribute_id
+                `pms_product_attribute_value` pav
+                LEFT JOIN pms_product_attribute pa ON pa.id = pav.product_attribute_id
             WHERE
                 pav.product_id = #{id}
                 AND pa.`type` = 0
@@ -43,7 +43,7 @@
             )
             AND pa.type = 0
         ORDER BY
-            sort DESC
+            pa.sort DESC
     </select>
 
 </mapper>
