@@ -223,8 +223,8 @@ public class SearchProductServiceImpl implements SearchProductService {
         categoryVo.setValue(categoryValues);
         searchResponse.setCatelog(categoryVo);
         //获取属性
-        TermsAggregation attrNameAgg = aggregations.getChildrenAggregation("attrName_agg").
-                getTermsAggregation("attrValueList.name");
+        TermsAggregation attrNameAgg = aggregations.getChildrenAggregation("attr_agg").
+                getTermsAggregation("attrName_agg");
         List<SearchResponseAttrVo> attrVos = new ArrayList<>();
         attrNameAgg.getBuckets().forEach(bucket -> {
             SearchResponseAttrVo vo = new SearchResponseAttrVo();
