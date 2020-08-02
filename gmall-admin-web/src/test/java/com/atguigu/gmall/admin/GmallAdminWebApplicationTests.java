@@ -18,7 +18,7 @@ public class GmallAdminWebApplicationTests {
     public void contextLoads() throws Exception {
 
 
-            ZooKeeper zk = new ZooKeeper("127.0.0.1:2181", 3000, null);
+            ZooKeeper zk = new ZooKeeper("192.168.1.133:2181", 3000, null);
             System.out.println("=========创建节点===========");
             if(zk.exists("/test", false) == null)
             {

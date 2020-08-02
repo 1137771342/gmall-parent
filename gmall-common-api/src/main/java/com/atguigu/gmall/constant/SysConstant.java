@@ -9,4 +9,8 @@ package com.atguigu.gmall.constant;
 public class SysConstant {
 
     public static final Integer ZERO = 0;
+
+    public static final String ASC="asc";
+
+    public static final String DESC="desc";
 }

@@ -1,14 +1,16 @@
-package com.atguigu.gamll;
+package com.atguigu.gmall;
 
+import com.alibaba.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class})
-public class GmallShopPortalApplication {
+@EnableDubbo
+public class GmallSearchApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(GmallShopPortalApplication.class, args);
+        SpringApplication.run(GmallSearchApplication.class, args);
     }
 
 }

@@ -26,7 +26,7 @@ public class RedissonConfig {
     @Bean
     RedissonClient redisson() throws IOException {
         Config config = new Config();
-        config.useSingleServer().setAddress("redis://127.0.0.1:6379");
+        config.useSingleServer().setAddress("redis://192.168.1.133:6379");
         return Redisson.create(config);
     }
 }
