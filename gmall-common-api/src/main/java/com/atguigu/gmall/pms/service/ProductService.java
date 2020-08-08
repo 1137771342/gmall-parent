@@ -1,6 +1,7 @@
 package com.atguigu.gmall.pms.service;
 
 import com.atguigu.gmall.pms.entity.Product;
+import com.atguigu.gmall.to.es.EsProduct;
 import com.atguigu.gmall.vo.PageInfoVo;
 import com.atguigu.gmall.vo.product.PmsProductParam;
 import com.atguigu.gmall.vo.product.PmsProductQueryParam;
@@ -39,4 +40,18 @@ public interface ProductService extends IService<Product> {
      */
     void batchUpdatePublishStatus (List<Long> ids, Integer publishStatus);
 
+    /**
+     * 获取商品详情
+     *
+     * @param id
+     * @return
+     */
+    EsProduct productAllInfo(Long id);
+
+    /**
+     * 查询商品的sku信息
+     * @param id
+     * @return
+     */
+    EsProduct productSkuInfo(Long id);
 }
