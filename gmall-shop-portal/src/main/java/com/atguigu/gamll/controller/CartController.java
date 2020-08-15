@@ -1,7 +1,12 @@
 package com.atguigu.gamll.controller;
 
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.atguigu.gmall.cart.service.CartService;
 import com.atguigu.gmall.to.CommonResult;
+import com.atguigu.gmall.vo.cart.CartResponse;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -14,9 +19,27 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/cart")
 public class CartController {
 
-    //添加购物车
 
+    @Reference
+    CartService cartService;
 
+    /**
+     * 添加商品到购物车
+     *
+     * @param skuId       商品id
+     * @param cartKey     uuid 作离线购物车使用
+     * @param accessToken 根据这个判断用户是否登录
+     * @return
+     */
+    @PostMapping("/add")
+    public CommonResult addToCart(@RequestParam("skuId") String skuId,
+                                  @RequestParam(value = "cartKey", required = false) String cartKey,
+                                  @RequestParam(value = "accessToken", required = false) String accessToken) {
+
+        CartResponse response = cartService.addToCart(skuId, cartKey, accessToken);
+        return new CommonResult().success(response);
+
+    }
 
 
 }
