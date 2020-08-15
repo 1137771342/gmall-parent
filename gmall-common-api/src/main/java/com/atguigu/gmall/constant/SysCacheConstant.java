@@ -9,5 +9,9 @@ package com.atguigu.gmall.constant;
  */
 public class SysCacheConstant {
 
-    public static final String CATEGORY_CACHE_KEY ="category_cache_key";
+    public static final String CATEGORY_CACHE_KEY = "category_cache_key";
+
+    public static final String LOGIN_MEMBER = "login:member:";
+
+    public static final Long LOGIN_MEMBER_TIMEOUT = 30L;
 }
