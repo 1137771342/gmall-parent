@@ -145,9 +145,27 @@ public class CartServiceImpl implements CartService {
      * 合并购物车 可以更具参数去redis中查询
      *
      * @param cartKey 离线购物车
-     * @param id      登录后的购物车
+     * @param id      用户id 登录后的购物车
      */
     private void margeCart(String cartKey, Long id) {
+        //临时购物车
+        String tempCart = CartCacheConstant.TEMP_CART_KEY_PREFIX + cartKey;
+        //用户购物车
+        String userCart = CartCacheConstant.USER_CART_KEY_PREFIX + id;
+        RMap<String, String> map = redissonClient.getMap(tempCart);
+        if (map != null && !map.isEmpty()) {
+            map.entrySet().forEach(item -> {
+                String skuId = item.getKey();
+                CartItem cartItem = JSON.parseObject(item.getValue(), CartItem.class);
+                try {
+                    addItemToCart(Long.parseLong(skuId), cartItem.getCount(), userCart);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            map.clear();
+        }
+
 
     }
 }

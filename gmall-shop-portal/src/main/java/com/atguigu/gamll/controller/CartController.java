@@ -35,7 +35,7 @@ public class CartController {
      */
     @PostMapping("/add")
     public CommonResult addToCart(@RequestParam("skuId") Long skuId,
-                                  @RequestParam(value = "skuId", defaultValue = "1") Integer num,
+                                  @RequestParam(value = "num", defaultValue = "1") Integer num,
                                   @RequestParam(value = "cartKey", required = false) String cartKey,
                                   @RequestParam(value = "accessToken", required = false) String accessToken) throws ExecutionException, InterruptedException {
 
