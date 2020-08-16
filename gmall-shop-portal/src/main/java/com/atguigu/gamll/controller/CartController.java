@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.concurrent.ExecutionException;
+
 /**
  * @Project_Name gmall-parent
  * @Package_Name com.atguigu.gamll.controller
@@ -32,11 +34,12 @@ public class CartController {
      * @return
      */
     @PostMapping("/add")
-    public CommonResult addToCart(@RequestParam("skuId") String skuId,
+    public CommonResult addToCart(@RequestParam("skuId") Long skuId,
+                                  @RequestParam(value = "skuId", defaultValue = "1") Integer num,
                                   @RequestParam(value = "cartKey", required = false) String cartKey,
-                                  @RequestParam(value = "accessToken", required = false) String accessToken) {
+                                  @RequestParam(value = "accessToken", required = false) String accessToken) throws ExecutionException, InterruptedException {
 
-        CartResponse response = cartService.addToCart(skuId, cartKey, accessToken);
+        CartResponse response = cartService.addToCart(skuId, num, cartKey, accessToken);
         return new CommonResult().success(response);
 
     }

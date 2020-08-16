@@ -2,6 +2,8 @@ package com.atguigu.gmall.cart.service;
 
 import com.atguigu.gmall.vo.cart.CartResponse;
 
+import java.util.concurrent.ExecutionException;
+
 /**
  * @Project_Name gmall-parent
  * @Package_Name com.atguigu.gmall.cart.service
@@ -14,9 +16,10 @@ public interface CartService {
      * 添加商品到购物车
      *
      * @param skuId       商品id
+     * @param num         商品的数量
      * @param cartKey     uuid 作离线购物车使用
      * @param accessToken 根据这个判断用户是否登录
      * @return
      */
-    CartResponse addToCart(String skuId, String cartKey, String accessToken);
+    CartResponse addToCart(Long skuId, Integer num, String cartKey, String accessToken) throws ExecutionException, InterruptedException;
 }
