@@ -4,10 +4,7 @@ import com.alibaba.dubbo.config.annotation.Reference;
 import com.atguigu.gmall.cart.service.CartService;
 import com.atguigu.gmall.to.CommonResult;
 import com.atguigu.gmall.vo.cart.CartResponse;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.ExecutionException;
 
@@ -43,6 +40,83 @@ public class CartController {
         return new CommonResult().success(response);
 
     }
+
+
+    /**
+     * 更新购物车
+     *
+     * @param skuId
+     * @param num
+     * @param cartKey
+     * @param accessToken
+     * @return
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
+    @PostMapping("/update")
+    public CommonResult updateCart(@RequestParam("skuId") Long skuId,
+                                   @RequestParam(value = "num", defaultValue = "1") Integer num,
+                                   @RequestParam(value = "cartKey", required = false) String cartKey,
+                                   @RequestParam(value = "accessToken", required = false) String accessToken) throws ExecutionException, InterruptedException {
+
+        CartResponse response = cartService.updateCart(skuId, num, cartKey, accessToken);
+        return new CommonResult().success(response);
+
+    }
+
+    /**
+     * 查询购物车列表
+     *
+     * @param cartKey
+     * @param accessToken
+     * @return
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
+    @GetMapping("/list")
+    public CommonResult cartList(@RequestParam(value = "cartKey", required = false) String cartKey,
+                                 @RequestParam(value = "accessToken", required = false) String accessToken) throws ExecutionException, InterruptedException {
+
+        CartResponse response = cartService.cartList(cartKey, accessToken);
+        return new CommonResult().success(response);
+
+    }
+
+    /**
+     * 删除购物车
+     * @param skuId
+     * @param cartKey
+     * @param accessToken
+     * @return
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
+    @GetMapping("/cartDel")
+    public CommonResult cartDel(@RequestParam("skuId") Long skuId,
+                                 @RequestParam(value = "cartKey", required = false) String cartKey,
+                                 @RequestParam(value = "accessToken", required = false) String accessToken) throws ExecutionException, InterruptedException {
+
+        CartResponse response = cartService.cartDel(skuId,cartKey, accessToken);
+        return new CommonResult().success(response);
+    }
+
+
+    /**
+     * 清理购物车
+     * @param cartKey
+     * @param accessToken
+     * @return
+     */
+
+    @GetMapping("/clear")
+    public CommonResult cartClear(
+            @RequestParam(value = "cartKey",required = false) String cartKey,
+            @RequestParam(value = "accessToken",required = false) String accessToken){
+
+        CartResponse cartResponse = cartService.clearCart(cartKey,accessToken);
+        return new CommonResult().success(cartResponse);
+    }
+
 
 
 }

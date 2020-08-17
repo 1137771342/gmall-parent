@@ -2,6 +2,7 @@ package com.atguigu.gmall.vo.cart;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.commons.collections.CollectionUtils;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -33,19 +34,29 @@ public class Cart implements Serializable {
 
     //获取总数
     public Integer getCount() {
+
         AtomicInteger integer = new AtomicInteger(0);
-        cartItems.forEach(cartItem -> {
-            integer.getAndAdd(cartItem.getCount());
-        });
-        return integer.get();
+        if (CollectionUtils.isNotEmpty(cartItems)) {
+            cartItems.forEach(cartItem -> {
+                integer.getAndAdd(cartItem.getCount());
+            });
+            return integer.get();
+        } else {
+            return 0;
+        }
     }
 
-    public BigDecimal getTotalPrice(){
+    public BigDecimal getTotalPrice() {
         AtomicReference<BigDecimal> allTotal = new AtomicReference<>(new BigDecimal("0"));
-        cartItems.forEach(cartItem -> {
-            BigDecimal add = allTotal.get().add(cartItem.getTotalPrice());
-            allTotal.set(add);
-        });
-        return allTotal.get();
+        if (CollectionUtils.isNotEmpty(cartItems)) {
+
+            cartItems.forEach(cartItem -> {
+                BigDecimal add = allTotal.get().add(cartItem.getTotalPrice());
+                allTotal.set(add);
+            });
+            return allTotal.get();
+        } else {
+            return new BigDecimal(0);
+        }
     }
 }

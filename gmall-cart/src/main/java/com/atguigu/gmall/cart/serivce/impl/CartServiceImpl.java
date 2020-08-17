@@ -12,6 +12,7 @@ import com.atguigu.gmall.pms.entity.SkuStock;
 import com.atguigu.gmall.pms.service.ProductService;
 import com.atguigu.gmall.pms.service.SkuStockService;
 import com.atguigu.gmall.ums.entity.Member;
+import com.atguigu.gmall.vo.cart.Cart;
 import com.atguigu.gmall.vo.cart.CartItem;
 import com.atguigu.gmall.vo.cart.CartResponse;
 import com.atguigu.gmall.vo.cart.UserCartKey;
@@ -22,7 +23,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -73,7 +75,69 @@ public class CartServiceImpl implements CartService {
         CartItem cartItem = addItemToCart(skuId, num, userCartKey.getFinalCartKey());
         CartResponse cartResponse = new CartResponse();
         cartResponse.setCartItem(cartItem);
+        //返回购物车列表
+        cartResponse.setCart(cartList(cartKey, accessToken).getCart());
         return cartResponse;
+    }
+
+    @Override
+    public CartResponse updateCart(Long skuId, Integer num, String cartKey, String accessToken) {
+        CartResponse cartResponse = new CartResponse();
+        UserCartKey userCartKey = memberComponent.getCartKey(accessToken, cartKey);
+        RMap<String, String> map = redissonClient.getMap(userCartKey.getFinalCartKey());
+        if (map != null && !map.isEmpty()) {
+            CartItem cartItem = JSON.parseObject(map.get(skuId), CartItem.class);
+            cartItem.setCount(num);
+            map.put(skuId.toString(), JSON.toJSONString(cartItem));
+            cartResponse.setCartItem(cartItem);
+        }
+        return cartResponse;
+    }
+
+    @Override
+    public CartResponse cartList(String cartKey, String accessToken) {
+        CartResponse cartResponse = new CartResponse();
+        UserCartKey userCartKey = memberComponent.getCartKey(accessToken, cartKey);
+        //判断购物车是否需要合并
+        if (userCartKey.isLogin()) {
+            margeCart(cartKey, userCartKey.getUserId());
+        }
+        RMap<String, String> map = redissonClient.getMap(userCartKey.getFinalCartKey());
+        Cart cart = new Cart();
+        List<CartItem> cartItems = new ArrayList<>();
+        if (map != null && !map.isEmpty()) {
+            map.entrySet().forEach(item -> {
+                CartItem cartItem = JSON.parseObject(item.getValue(), CartItem.class);
+                cartItems.add(cartItem);
+            });
+            cart.setCartItems(cartItems);
+        } else {
+            //当为空的时候新建一个购物车给前端
+            cartResponse.setCartKey(userCartKey.getTempCartKey());
+        }
+        cartResponse.setCart(cart);
+        return cartResponse;
+    }
+
+    @Override
+    public CartResponse cartDel(Long skuId, String cartKey, String accessToken) {
+        UserCartKey userCartKey = memberComponent.getCartKey(accessToken, cartKey);
+        String finalCartKey = userCartKey.getFinalCartKey();
+        RMap<String, String> map = redissonClient.getMap(finalCartKey);
+        map.remove(skuId.toString());
+
+        CartResponse cartResponse = this.cartList(cartKey, accessToken);
+        return cartResponse;
+
+
+    }
+
+    @Override
+    public CartResponse clearCart(String cartKey, String accessToken) {
+        UserCartKey userCartKey = memberComponent.getCartKey(accessToken, cartKey);
+        RMap<Object, Object> map = redissonClient.getMap(userCartKey.getFinalCartKey());
+        map.clear();
+        return new CartResponse();
     }
 
     /**
