@@ -14,6 +14,7 @@ import com.atguigu.gmall.pms.service.SkuStockService;
 import com.atguigu.gmall.ums.entity.Member;
 import com.atguigu.gmall.vo.cart.CartItem;
 import com.atguigu.gmall.vo.cart.CartResponse;
+import com.atguigu.gmall.vo.cart.UserCartKey;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
@@ -63,40 +64,15 @@ public class CartServiceImpl implements CartService {
         //1. 根据accessToken获取用户id的信息
         Member member = memberComponent.getMemberByAccessToken(accessToken);
 
-        String finalCartKey = "";
         //2.用户不为空并且离线购物车有东西 ,进行合并购物车,并且清空 离线购物车
         if (member != null && StringUtils.isNotBlank(cartKey)) {
             margeCart(cartKey, member.getId());
         }
 
-        //3.用户登录了 给user购物车增加一条购物记录
-        if (member != null) {
-            finalCartKey = CartCacheConstant.USER_CART_KEY_PREFIX + member.getId();
-            //3.1 更具skuId 查出商品的信息 ,并给购物车添加数据
-            // 3.2 如果购物的一条信息已经存在就给count 增加数量,不存在就新加一条购物数量 ,返回的列表给前端
-            CartItem cartItem = addItemToCart(skuId, num, finalCartKey);
-            CartResponse cartResponse = new CartResponse();
-            cartResponse.setCartItem(cartItem);
-            return cartResponse;
-        }
-
-        //4.用户没有登录 给离线购物车增加一条购物记录
-        if (StringUtils.isNotBlank(cartKey)) {
-            finalCartKey = CartCacheConstant.TEMP_CART_KEY_PREFIX + cartKey;
-            //4.1 更具skuId 查出商品的信息 ,并给购物车添加数据
-            // 4.2 如果购物的一条信息已经存在就给count 增加数量,不存在就新加一条购物数量 ,返回性的列表给前端
-            CartItem cartItem = addItemToCart(skuId, num, finalCartKey);
-            CartResponse cartResponse = new CartResponse();
-            cartResponse.setCartItem(cartItem);
-            return cartResponse;
-        }
-        //5.如果以上都没有,就给它生成一个 cartKey,并将购物车的信息放在这个redis里面,且要把生成的这个返回给前端
-        String newCartKey = UUID.randomUUID().toString().replace("-", "");
-        finalCartKey = CartCacheConstant.TEMP_CART_KEY_PREFIX + newCartKey;
-        CartItem cartItem = addItemToCart(skuId, num, finalCartKey);
+        UserCartKey userCartKey = memberComponent.getCartKey(accessToken, cartKey);
+        CartItem cartItem = addItemToCart(skuId, num, userCartKey.getFinalCartKey());
         CartResponse cartResponse = new CartResponse();
         cartResponse.setCartItem(cartItem);
-        cartResponse.setCartKey(newCartKey);
         return cartResponse;
     }
 
