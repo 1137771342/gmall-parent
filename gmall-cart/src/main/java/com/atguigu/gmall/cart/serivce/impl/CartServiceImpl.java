@@ -4,6 +4,7 @@ package com.atguigu.gmall.cart.serivce.impl;
 import com.alibaba.dubbo.config.annotation.Reference;
 import com.alibaba.dubbo.config.annotation.Service;
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
 import com.atguigu.gmall.cart.commpont.MemberComponent;
 import com.atguigu.gmall.cart.service.CartService;
 import com.atguigu.gmall.constant.CartCacheConstant;
@@ -16,6 +17,7 @@ import com.atguigu.gmall.vo.cart.Cart;
 import com.atguigu.gmall.vo.cart.CartItem;
 import com.atguigu.gmall.vo.cart.CartResponse;
 import com.atguigu.gmall.vo.cart.UserCartKey;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
@@ -23,8 +25,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -107,8 +108,11 @@ public class CartServiceImpl implements CartService {
         List<CartItem> cartItems = new ArrayList<>();
         if (map != null && !map.isEmpty()) {
             map.entrySet().forEach(item -> {
-                CartItem cartItem = JSON.parseObject(item.getValue(), CartItem.class);
-                cartItems.add(cartItem);
+                //当key不为checked的时候再往CartItem添加
+                if (!item.getKey().equalsIgnoreCase(CartCacheConstant.CART_CHECKED_KEY)) {
+                    CartItem cartItem = JSON.parseObject(item.getValue(), CartItem.class);
+                    cartItems.add(cartItem);
+                }
             });
             cart.setCartItems(cartItems);
         } else {
@@ -123,6 +127,7 @@ public class CartServiceImpl implements CartService {
     public CartResponse cartDel(Long skuId, String cartKey, String accessToken) {
         UserCartKey userCartKey = memberComponent.getCartKey(accessToken, cartKey);
         String finalCartKey = userCartKey.getFinalCartKey();
+        checkItem(Arrays.asList(skuId),false,finalCartKey);
         RMap<String, String> map = redissonClient.getMap(finalCartKey);
         map.remove(skuId.toString());
 
@@ -155,20 +160,50 @@ public class CartServiceImpl implements CartService {
         List<Long> skuIdList = new ArrayList<>();
         UserCartKey userCartKey = memberComponent.getCartKey(accessToken, cartKey);
         RMap<String, String> map = redissonClient.getMap(userCartKey.getFinalCartKey());
-        if (StringUtils.isNotBlank(skuIds)){
+        if (StringUtils.isNotBlank(skuIds)) {
             String[] ids = skuIds.split(",");
             for (String skuId : ids) {
                 skuIdList.add(Long.parseLong(skuId));
-                if (map !=null && !map.isEmpty()){
+                if (map != null && !map.isEmpty()) {
                     CartItem cartItem = JSON.parseObject(map.get(skuId), CartItem.class);
                     cartItem.setCheck(checked);
                     //覆盖以前的redis的数据
-                    map.put(skuId,JSON.toJSONString(cartItem));
+                    map.put(skuId, JSON.toJSONString(cartItem));
                 }
-
             }
         }
-        return null;
+        //修改checked集合的状态
+        checkItem(skuIdList, checked, userCartKey.getFinalCartKey());
+        CartResponse cartResponse = cartList(cartKey, accessToken);
+        return cartResponse;
+    }
+
+    /**
+     * 维护选择的列表
+     *
+     * @param skuIdList
+     * @param checked
+     * @param finalCartKey
+     */
+    private void checkItem(List<Long> skuIdList, boolean checked, String finalCartKey) {
+        RMap<String, String> map = redissonClient.getMap(finalCartKey);
+        //redis中选中状态的集合
+        String checkedJson = map.get(CartCacheConstant.CART_CHECKED_KEY);
+        Set<Long> checkedSet = JSON.parseObject(checkedJson, new TypeReference<Set<Long>>() {
+        });
+        if (CollectionUtils.isEmpty(checkedSet)) {
+            checkedSet = new LinkedHashSet<>();
+        }
+        if (checked) {
+            //选中就往集合中增加数据
+            checkedSet.addAll(skuIdList);
+        } else {
+            //没有选中就移除集合中数据
+            checkedSet.removeAll(skuIdList);
+        }
+        //重新放入缓存中
+        map.put(CartCacheConstant.CART_CHECKED_KEY, JSON.toJSONString(checkedSet));
+
     }
 
     /**
@@ -209,6 +244,8 @@ public class CartServiceImpl implements CartService {
             //如果不存在直接加购物车
             map.put(skuId.toString(), JSON.toJSONString(newCartItem));
         }
+        //添加购物车时默认为选中zhuangtai
+        checkItem(Arrays.asList(skuId),true,finalCartKey);
         return newCartItem;
     }
 
@@ -226,17 +263,17 @@ public class CartServiceImpl implements CartService {
         RMap<String, String> map = redissonClient.getMap(tempCart);
         if (map != null && !map.isEmpty()) {
             map.entrySet().forEach(item -> {
-                String skuId = item.getKey();
-                CartItem cartItem = JSON.parseObject(item.getValue(), CartItem.class);
-                try {
-                    addItemToCart(Long.parseLong(skuId), cartItem.getCount(), userCart);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                if (!item.getKey().equalsIgnoreCase(CartCacheConstant.CART_CHECKED_KEY)) {
+                    String skuId = item.getKey();
+                    CartItem cartItem = JSON.parseObject(item.getValue(), CartItem.class);
+                    try {
+                        addItemToCart(Long.parseLong(skuId), cartItem.getCount(), userCart);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             });
             map.clear();
         }
-
-
     }
 }
