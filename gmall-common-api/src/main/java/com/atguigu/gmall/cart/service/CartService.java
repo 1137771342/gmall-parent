@@ -59,4 +59,14 @@ public interface CartService {
      */
     CartResponse clearCart(String cartKey, String accessToken);
 
+    /**
+     * 选中和不选中购物车
+     * @param skuIds
+     * @param ops
+     * @param cartKey
+     * @param accessToken
+     * @return
+     */
+    CartResponse checkCartItems(String skuIds, Integer ops, String cartKey, String accessToken);
+
 }

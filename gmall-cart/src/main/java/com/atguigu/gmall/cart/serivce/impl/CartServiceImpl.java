@@ -141,6 +141,37 @@ public class CartServiceImpl implements CartService {
     }
 
     /**
+     * 购物车
+     *
+     * @param skuIds
+     * @param ops
+     * @param cartKey
+     * @param accessToken
+     * @return
+     */
+    @Override
+    public CartResponse checkCartItems(String skuIds, Integer ops, String cartKey, String accessToken) {
+        boolean checked = ops == 1 ? true : false;
+        List<Long> skuIdList = new ArrayList<>();
+        UserCartKey userCartKey = memberComponent.getCartKey(accessToken, cartKey);
+        RMap<String, String> map = redissonClient.getMap(userCartKey.getFinalCartKey());
+        if (StringUtils.isNotBlank(skuIds)){
+            String[] ids = skuIds.split(",");
+            for (String skuId : ids) {
+                skuIdList.add(Long.parseLong(skuId));
+                if (map !=null && !map.isEmpty()){
+                    CartItem cartItem = JSON.parseObject(map.get(skuId), CartItem.class);
+                    cartItem.setCheck(checked);
+                    //覆盖以前的redis的数据
+                    map.put(skuId,JSON.toJSONString(cartItem));
+                }
+
+            }
+        }
+        return null;
+    }
+
+    /**
      * 添加商品到指定购物车
      *
      * @param skuId
