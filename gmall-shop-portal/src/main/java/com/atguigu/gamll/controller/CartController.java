@@ -117,6 +117,25 @@ public class CartController {
         return new CommonResult().success(cartResponse);
     }
 
+    /**
+     * 购物车选中或不选中
+     * @param skuIds
+     * @param ops
+     * @param cartKey
+     * @param accessToken
+     * @return
+     */
+    @PostMapping("/check")
+    public CommonResult cartCheck(@RequestParam("skuIds") String skuIds,
+                                  @RequestParam(value = "ops",defaultValue = "1") Integer ops,
+                                  @RequestParam(value = "cartKey",required = false) String cartKey,
+                                  @RequestParam(value = "accessToken",required = false) String accessToken){
+
+
+        CartResponse cartResponse = cartService.checkCartItems(skuIds,ops,cartKey,accessToken);
+        return new CommonResult().success(cartResponse);
+    }
+
 
 
 }
