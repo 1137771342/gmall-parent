@@ -76,6 +76,7 @@ public class CartServiceImpl implements CartService {
         CartItem cartItem = addItemToCart(skuId, num, userCartKey.getFinalCartKey());
         CartResponse cartResponse = new CartResponse();
         cartResponse.setCartItem(cartItem);
+        cartResponse.setCartKey(userCartKey.getTempCartKey());
         //返回购物车列表
         cartResponse.setCart(cartList(cartKey, accessToken).getCart());
         return cartResponse;
