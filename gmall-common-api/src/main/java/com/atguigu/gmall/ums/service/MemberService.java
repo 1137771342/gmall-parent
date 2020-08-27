@@ -1,7 +1,10 @@
 package com.atguigu.gmall.ums.service;
 
 import com.atguigu.gmall.ums.entity.Member;
+import com.atguigu.gmall.ums.entity.MemberReceiveAddress;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -20,4 +23,11 @@ public interface MemberService extends IService<Member> {
      * @return
      */
     Member login(String username, String password);
+
+    /**
+     * 获取地址
+     * @param id
+     * @return
+     */
+    List<MemberReceiveAddress> getMemberAddress(Long id);
 }

@@ -14,4 +14,6 @@ public class SysCacheConstant {
     public static final String LOGIN_MEMBER = "login:member:";
 
     public static final Long LOGIN_MEMBER_TIMEOUT = 30L;
+    //订单防重复提交设置的前缀
+    public static final String ORDER_UNIQUE_TOKEN = "order:unique:token";
 }

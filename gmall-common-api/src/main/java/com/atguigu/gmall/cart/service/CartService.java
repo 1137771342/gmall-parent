@@ -1,7 +1,9 @@
 package com.atguigu.gmall.cart.service;
 
+import com.atguigu.gmall.vo.cart.CartItem;
 import com.atguigu.gmall.vo.cart.CartResponse;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -69,4 +71,10 @@ public interface CartService {
      */
     CartResponse checkCartItems(String skuIds, Integer ops, String cartKey, String accessToken);
 
+    /**
+     * 通过accessToken 获取商品信息
+     * @param accessToken
+     * @return
+     */
+    List<CartItem> getCartItemSFromOrder(String accessToken);
 }

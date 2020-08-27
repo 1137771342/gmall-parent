@@ -17,6 +17,7 @@ import com.atguigu.gmall.vo.cart.Cart;
 import com.atguigu.gmall.vo.cart.CartItem;
 import com.atguigu.gmall.vo.cart.CartResponse;
 import com.atguigu.gmall.vo.cart.UserCartKey;
+import com.google.common.collect.Lists;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RMap;
@@ -128,7 +129,7 @@ public class CartServiceImpl implements CartService {
     public CartResponse cartDel(Long skuId, String cartKey, String accessToken) {
         UserCartKey userCartKey = memberComponent.getCartKey(accessToken, cartKey);
         String finalCartKey = userCartKey.getFinalCartKey();
-        checkItem(Arrays.asList(skuId),false,finalCartKey);
+        checkItem(Arrays.asList(skuId), false, finalCartKey);
         RMap<String, String> map = redissonClient.getMap(finalCartKey);
         map.remove(skuId.toString());
 
@@ -177,6 +178,30 @@ public class CartServiceImpl implements CartService {
         checkItem(skuIdList, checked, userCartKey.getFinalCartKey());
         CartResponse cartResponse = cartList(cartKey, accessToken);
         return cartResponse;
+    }
+
+    /**
+     * 确认购物车，从购物车中拿出挑选的商品
+     * @param accessToken
+     * @return
+     */
+    @Override
+    public List<CartItem> getCartItemSFromOrder(String accessToken) {
+        //确认订单是将选中的商品加入到订单
+        UserCartKey userCartKey = memberComponent.getCartKey(accessToken, null);
+        RMap<String, String> map = redissonClient.getMap(userCartKey.getFinalCartKey());
+        //获取选中的商品的集合
+        String checkItemIdJson = map.get(CartCacheConstant.CART_CHECKED_KEY);
+        List<CartItem> list= Lists.newArrayList();
+        if (StringUtils.isNoneBlank(checkItemIdJson)) {
+            Set<Long> itemsId = JSON.parseObject(checkItemIdJson, new TypeReference<Set<Long>>() {
+            });
+            itemsId.forEach(itemId -> {
+                CartItem cartItem = JSON.parseObject(map.get(itemId), CartItem.class);
+                list.add(cartItem);
+            });
+        }
+        return list;
     }
 
     /**
@@ -246,7 +271,7 @@ public class CartServiceImpl implements CartService {
             map.put(skuId.toString(), JSON.toJSONString(newCartItem));
         }
         //添加购物车时默认为选中zhuangtai
-        checkItem(Arrays.asList(skuId),true,finalCartKey);
+        checkItem(Arrays.asList(skuId), true, finalCartKey);
         return newCartItem;
     }
 
