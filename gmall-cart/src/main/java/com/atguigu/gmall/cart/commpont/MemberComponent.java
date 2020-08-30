@@ -27,8 +27,10 @@ public class MemberComponent {
 
     public Member getMemberByAccessToken(String accessToken) {
         String userJSon = redisTemplate.opsForValue().get(SysCacheConstant.LOGIN_MEMBER + accessToken);
-
-        return JSON.parseObject(userJSon, Member.class);
+        if (StringUtils.isNoneBlank(userJSon)) {
+            return JSON.parseObject(userJSon, Member.class);
+        }
+        return null;
     }
 
     /**

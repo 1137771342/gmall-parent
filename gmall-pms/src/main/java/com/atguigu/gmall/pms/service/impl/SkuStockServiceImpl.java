@@ -19,4 +19,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class SkuStockServiceImpl extends ServiceImpl<SkuStockMapper, SkuStock> implements SkuStockService {
 
+    @Override
+    public SkuStock getSkuStockBySkuId(Long skuId) {
+        return this.getById(skuId);
+    }
 }

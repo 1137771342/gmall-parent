@@ -42,4 +42,11 @@ public class MemberServiceImpl extends ServiceImpl<MemberMapper, Member> impleme
         return memberReceiveAddressService
                 .list(new QueryWrapper<MemberReceiveAddress>().eq("member_id", id));
     }
+
+    @Override
+    public MemberReceiveAddress getMemberAddressByAddressId(Long addressId) {
+        return memberReceiveAddressService.getById(addressId);
+    }
+
+
 }

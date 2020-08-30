@@ -13,4 +13,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface SkuStockService extends IService<SkuStock> {
 
+    /**
+     * 根据skuId获取sku信息
+     * @param skuId
+     * @return
+     */
+    SkuStock getSkuStockBySkuId(Long skuId);
 }
