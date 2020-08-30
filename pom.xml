@@ -35,7 +35,7 @@
         <spring.security.jwt.version>1.0.10.RELEASE</spring.security.jwt.version>
         <commons-lang3.version>3.8.1</commons-lang3.version>
         <commons.io.version>2.5</commons.io.version>
-        <commons-beanutils.version>1.9.3</commons-beanutils.version>
+        <commons-beanutils.version>1.9.4</commons-beanutils.version>
         <hutool.version>3.3.2</hutool.version>
         <fastjson.version>1.2.56</fastjson.version>
     </properties>
