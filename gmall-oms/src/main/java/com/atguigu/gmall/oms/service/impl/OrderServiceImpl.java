@@ -27,6 +27,7 @@ import com.atguigu.gmall.vo.order.OrderConfirmVo;
 import com.atguigu.gmall.vo.order.OrderCreateVo;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +61,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     @Reference
     SkuStockService skuStockService;
 
-    @Autowired
+    @Reference
     ProductService productService;
 
     @Autowired
@@ -99,7 +100,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         //返回的orderToken 防止订单重复提交
         String replace = UUID.randomUUID().toString().replace("-", "");
         //手动设置orderToken使用业务逻辑来设置key的过期时间
-        String orderToken = replace + "_" + System.currentTimeMillis() + "_" + 10 * 60;
+        String orderToken = replace + "_" + System.currentTimeMillis() + "_" + 600 * 1000;
         redisTemplate.opsForSet().add(SysCacheConstant.ORDER_UNIQUE_TOKEN, orderToken);
         confirmVo.setOrderToken(orderToken);
         cartItems.forEach(cartItem -> {
@@ -138,8 +139,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             return orderCreateVo;
         }
         //检验令牌是否超时
-        long creatTime = Long.parseLong(s[0]);
-        long timeout = Long.parseLong(s[1]);
+        long creatTime = Long.parseLong(s[1]);
+        long timeout = Long.parseLong(s[2]);
         if (System.currentTimeMillis() - creatTime >= timeout) {
             OrderCreateVo orderCreateVo = new OrderCreateVo();
             orderCreateVo.setToken("页面超时，请刷新");
@@ -162,6 +163,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (!flag) {
             OrderCreateVo createVo = new OrderCreateVo();
             createVo.setLimit(false);
+            createVo.setToken("订单比价失败，请重试");
             return createVo;
         }
         //初始化订单orderCreateVo
@@ -170,7 +172,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         Order order = initOrder(frontendPrice, addressId, note, member, orderCreateVo.getOrderSn());
         orderMapper.insert(order);
         //保存订单明细
-        saveOrderItem(order);
+        saveOrderItem(order, accessToken);
         return orderCreateVo;
     }
 
@@ -178,16 +180,19 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * 保存订单明细
      *
      * @param order
+     * @param accessToken
      */
-    private void saveOrderItem(Order order) {
+    private void saveOrderItem(Order order, String accessToken) {
         //从threadLocal中取出cartItems
         List<CartItem> cartItems = threadLocal.get();
         List<OrderItem> orderItems = new ArrayList<>();
+        List<Long> skuIds = Lists.newArrayList();
         cartItems.forEach(cartItem -> {
             OrderItem orderItem = new OrderItem();
             orderItem.setOrderId(order.getId());
             orderItem.setOrderSn(order.getOrderSn());
             Long skuId = cartItem.getSkuId();
+            skuIds.add(skuId);
             EsProduct esProduct = productService.productSkuInfo(skuId);
             SkuStock skuStock = new SkuStock();
             List<EsSkuProductInfo> skuProductInfos = esProduct.getSkuProductInfos();
@@ -214,6 +219,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             orderItems.add(orderItem);
         });
         orderItemService.saveBatch(orderItems);
+        //3、清除购物车中已经下单的商品
+        cartService.removeCartItem(accessToken, skuIds);
     }
 
     /**
@@ -225,7 +232,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * @param member
      * @return
      */
-    private OrderCreateVo initCreateOrderVo(BigDecimal frontendPrice, Long addressId, String accessToken, Member member) {
+    private OrderCreateVo initCreateOrderVo(BigDecimal frontendPrice, Long addressId,
+                                            String accessToken, Member member) {
         OrderCreateVo orderCreateVo = new OrderCreateVo();
         List<CartItem> cartItems = cartService.getCartItemSFromOrder(accessToken);
         String orderSn = IdWorker.getTimeId();

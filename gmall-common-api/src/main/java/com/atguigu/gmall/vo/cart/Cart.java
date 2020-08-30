@@ -49,7 +49,6 @@ public class Cart implements Serializable {
     public BigDecimal getTotalPrice() {
         AtomicReference<BigDecimal> allTotal = new AtomicReference<>(new BigDecimal("0"));
         if (CollectionUtils.isNotEmpty(cartItems)) {
-
             cartItems.forEach(cartItem -> {
                 BigDecimal add = allTotal.get().add(cartItem.getTotalPrice());
                 allTotal.set(add);

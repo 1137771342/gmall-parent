@@ -182,6 +182,7 @@ public class CartServiceImpl implements CartService {
 
     /**
      * 确认购物车，从购物车中拿出挑选的商品
+     *
      * @param accessToken
      * @return
      */
@@ -192,16 +193,32 @@ public class CartServiceImpl implements CartService {
         RMap<String, String> map = redissonClient.getMap(userCartKey.getFinalCartKey());
         //获取选中的商品的集合
         String checkItemIdJson = map.get(CartCacheConstant.CART_CHECKED_KEY);
-        List<CartItem> list= Lists.newArrayList();
+        List<CartItem> list = Lists.newArrayList();
         if (StringUtils.isNoneBlank(checkItemIdJson)) {
             Set<Long> itemsId = JSON.parseObject(checkItemIdJson, new TypeReference<Set<Long>>() {
             });
             itemsId.forEach(itemId -> {
-                CartItem cartItem = JSON.parseObject(map.get(itemId), CartItem.class);
+                CartItem cartItem = JSON.parseObject(map.get(itemId.toString()), CartItem.class);
                 list.add(cartItem);
             });
         }
         return list;
+    }
+
+    /**
+     * @param accessToken
+     * @param skuIds
+     */
+    @Override
+    public void removeCartItem(String accessToken, List<Long> skuIds) {
+        UserCartKey userCartKey = memberComponent.getCartKey(accessToken, null);
+        RMap<String, String> map = redissonClient.getMap(userCartKey.getFinalCartKey());
+        //移除购物车中选中的商品
+        skuIds.forEach(skuId -> {
+            map.remove(skuId.toString());
+        });
+        //移除checked
+        map.put(CartCacheConstant.CART_CHECKED_KEY, JSON.toJSONString(new LinkedHashSet<Long>()));
     }
 
     /**

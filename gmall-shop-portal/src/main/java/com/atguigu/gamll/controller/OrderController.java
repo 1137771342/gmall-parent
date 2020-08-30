@@ -12,10 +12,7 @@ import com.atguigu.gmall.vo.order.OrderCreateVo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 
@@ -26,6 +23,7 @@ import java.math.BigDecimal;
  * @date 2020/8/25   21:30
  */
 @RestController
+@RequestMapping("/order")
 public class OrderController {
 
     @Reference
@@ -76,9 +74,9 @@ public class OrderController {
         RpcContext.getContext().setAttachment("orderToken", orderToken);
         OrderCreateVo orderCreateVo = orderService.createOrder(totalPrice, addressId, note);
         if (StringUtils.isNoneBlank(orderCreateVo.getToken())) {
-            CommonResult commonResult = new CommonResult();
+            CommonResult commonResult = new CommonResult().failed();
             commonResult.setMessage(orderCreateVo.getToken());
-            return commonResult.failed();
+            return commonResult;
         }
         return new CommonResult().success(orderCreateVo);
 
