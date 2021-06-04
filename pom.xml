@@ -31,7 +31,7 @@
         <mybatis.plus.spring.boot.version>3.1.0</mybatis.plus.spring.boot.version>
         <elasticsearch.version>6.6.2</elasticsearch.version>
         <redission.version>3.12.0</redission.version>
-        <validator.version>5.4.1.Final</validator.version>
+        <validator.version>6.0.20.Final</validator.version>
         <spring.security.jwt.version>1.0.10.RELEASE</spring.security.jwt.version>
         <commons-lang3.version>3.8.1</commons-lang3.version>
         <commons.io.version>2.5</commons.io.version>
